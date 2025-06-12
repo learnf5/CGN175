@@ -1,0 +1,98 @@
+#TMSH-VERSION: 16.1.0
+
+ltm virtual /Common/CGN_vs {
+    creation-time 2022-02-15:18:42:03
+    destination /Common/0.0.0.0:0
+    last-modified-time 2022-02-16:12:49:21
+    mask any
+    profiles {
+        /Common/fastL4 { }
+    }
+    serverssl-use-sni disabled
+    source 0.0.0.0/0
+    translate-address enabled
+    translate-port disabled
+    vlans {
+        /Common/subscriber_vlan
+    }
+    vlans-enabled
+}
+ltm virtual-address /Common/0.0.0.0 {
+    address any
+    arp disabled
+    icmp-echo disabled
+    mask any
+    traffic-group /Common/traffic-group-1
+}
+net route-domain /Common/0 {
+    id 0
+    vlans {
+        /Common/http-tunnel
+        /Common/socks-tunnel
+        /Common/subscriber_vlan
+        /Common/internet_vlan
+    }
+}
+net self /Common/subscriber_f {
+    address 10.10.1.33/16
+    traffic-group /Common/traffic-group-1
+    vlan /Common/subscriber_vlan
+}
+net self /Common/internet_f {
+    address 172.16.1.33/16
+    traffic-group /Common/traffic-group-1
+    vlan /Common/internet_vlan
+}
+net self /Common/internet_nf {
+    address 172.16.1.31/16
+    traffic-group /Common/traffic-group-local-only
+    vlan /Common/internet_vlan
+}
+net self /Common/subscriber_nf {
+    address 10.10.1.31/16
+    traffic-group /Common/traffic-group-local-only
+    vlan /Common/subscriber_vlan
+}
+net stp /Common/cist {
+    interfaces {
+        1.1 {
+            external-path-cost 200000
+            internal-path-cost 200000
+        }
+        1.2 {
+            external-path-cost 200000
+            internal-path-cost 200000
+        }
+    }
+    vlans {
+        /Common/internet_vlan
+        /Common/subscriber_vlan
+    }
+}
+net vlan /Common/internet_vlan {
+    cmp-hash dst-ip
+    interfaces {
+        1.2 { }
+    }
+    sflow {
+        poll-interval-global no
+        sampling-rate-global no
+    }
+    tag 4094
+}
+net vlan /Common/subscriber_vlan {
+    cmp-hash src-ip
+    interfaces {
+        1.1 { }
+    }
+    sflow {
+        poll-interval-global no
+        sampling-rate-global no
+    }
+    tag 4093
+}
+net fdb vlan /Common/internet_vlan { }
+net fdb vlan /Common/subscriber_vlan { }
+sys provision afm {
+    level nominal
+}

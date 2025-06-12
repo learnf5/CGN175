@@ -1,0 +1,169 @@
+#TMSH-VERSION: 16.1.0
+
+ltm node /Common/10.10.1.30 {
+    address 10.10.1.30
+}
+ltm node /Common/172.16.20.2 {
+    address 172.16.20.2
+}
+ltm pool /Common/ipfix_pool {
+    members {
+        /Common/172.16.20.2:514 {
+            address 172.16.20.2
+        }
+    }
+}
+ltm pool /Common/syslog_pool {
+    members {
+        /Common/10.10.1.30:514 {
+            address 10.10.1.30
+        }
+    }
+}
+net route-domain /Common/0 {
+    id 0
+    vlans {
+        /Common/http-tunnel
+        /Common/socks-tunnel
+        /Common/subscriber_vlan
+        /Common/internet_vlan
+    }
+}
+net self /Common/subscriber_f {
+    address 10.10.1.33/16
+    traffic-group /Common/traffic-group-1
+    vlan /Common/subscriber_vlan
+}
+net self /Common/internet_f {
+    address 172.16.1.33/16
+    traffic-group /Common/traffic-group-1
+    vlan /Common/internet_vlan
+}
+net self /Common/internet_nf {
+    address 172.16.1.31/16
+    traffic-group /Common/traffic-group-local-only
+    vlan /Common/internet_vlan
+}
+net self /Common/subscriber_nf {
+    address 10.10.1.31/16
+    traffic-group /Common/traffic-group-local-only
+    vlan /Common/subscriber_vlan
+}
+net stp /Common/cist {
+    interfaces {
+        1.1 {
+            external-path-cost 200000
+            internal-path-cost 200000
+        }
+        1.2 {
+            external-path-cost 200000
+            internal-path-cost 200000
+        }
+    }
+    vlans {
+        /Common/internet_vlan
+        /Common/subscriber_vlan
+    }
+}
+net vlan /Common/internet_vlan {
+    cmp-hash dst-ip
+    interfaces {
+        1.2 { }
+    }
+    sflow {
+        poll-interval-global no
+        sampling-rate-global no
+    }
+    tag 4094
+}
+net vlan /Common/subscriber_vlan {
+    cmp-hash src-ip
+    interfaces {
+        1.1 { }
+    }
+    sflow {
+        poll-interval-global no
+        sampling-rate-global no
+    }
+    tag 4093
+}
+net fdb vlan /Common/internet_vlan { }
+net fdb vlan /Common/subscriber_vlan { }
+security log profile /Common/CGN_ipfix_logs {
+    nat {
+        end-inbound-session enabled
+        end-outbound-session {
+            action enabled
+        }
+        errors enabled
+        log-publisher /Common/ipfix_remote_publisher
+        quota-exceeded enabled
+        start-inbound-session enabled
+        start-outbound-session {
+            action enabled
+        }
+    }
+}
+security log profile /Common/CGN_logs {
+    nat {
+        end-inbound-session enabled
+        end-outbound-session {
+            action enabled
+        }
+        errors enabled
+        log-publisher /Common/log_CGN_local
+        log-subscriber-id enabled
+        lsn-legacy-mode enabled
+        quota-exceeded enabled
+        start-inbound-session enabled
+        start-outbound-session {
+            action enabled
+        }
+    }
+}
+security log profile /Common/CGN_remote_logs {
+    nat {
+        end-inbound-session enabled
+        end-outbound-session {
+            action enabled
+        }
+        errors enabled
+        log-publisher /Common/syslog_remote_publisher
+        quota-exceeded enabled
+        start-inbound-session enabled
+        start-outbound-session {
+            action enabled
+        }
+    }
+}
+security nat policy /Common/CGN_policy {
+    traffic-group /Common/traffic-group-1
+}
+sys provision afm {
+    level nominal
+}
+sys log-config publisher /Common/ipfix_remote_publisher {
+    destinations {
+        /Common/ipfix_remote { }
+    }
+}
+sys log-config publisher /Common/log_CGN_local {
+    destinations {
+        /Common/alertd { }
+        /Common/local-db { }
+        /Common/local-syslog { }
+    }
+}
+sys log-config publisher /Common/syslog_remote_publisher {
+    destinations {
+        /Common/syslog_remote { }
+    }
+}
+sys log-config destination ipfix /Common/ipfix_remote {
+    pool-name /Common/ipfix_pool
+    transport-profile /Common/udp
+}
+sys log-config destination remote-high-speed-log /Common/syslog_remote {
+    pool-name /Common/syslog_pool
+    protocol udp
+}
