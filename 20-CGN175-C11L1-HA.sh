@@ -4,8 +4,8 @@
     sudo ip route add 172.16.0.0/16 via 10.10.1.33
 
     # download config script from GitHub, copy to bigip1 and 2 and run on bigip1 and 2; make other config changes to bigip1 and 2
-    curl --silent https://raw.githubusercontent.com/learnf5/cgnat/main/2_cgnat_base_1.scf -o /tmp/2_cgnat_base_1.scf
-    curl --silent https://raw.githubusercontent.com/learnf5/cgnat/main/cgnat_base_2.scf -o /tmp/cgnat_base_2.scf
+    curl --silent https://raw.githubusercontent.com/learnf5/$COURSE_ID/main/2_cgnat_base_1.scf -o /tmp/2_cgnat_base_1.scf
+    curl --silent https://raw.githubusercontent.com/learnf5/$COURSE_ID/main/cgnat_base_2.scf -o /tmp/cgnat_base_2.scf
     sudo scp /tmp/2_cgnat_base_1.scf 192.168.1.31:/var/local/scf
     sudo scp /tmp/cgnat_base_2.scf 192.168.2.31:/var/local/scf
     sudo ssh 192.168.1.31 tmsh mod sys state-mirroring addr none

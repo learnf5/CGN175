@@ -3,7 +3,7 @@ sudo ssh 192.168.1.31 -t ssh 172.16.20.1 ip route add 40.0.101.0/24 via 172.16.1
 sudo ip route add 172.16.0.0/16 via 10.10.1.33
 
 # download archive and copy to bigip; make some config change and load/merge archive file on bigip
-curl --silent https://raw.githubusercontent.com/learnf5/cgnat/main/2_cgnat_base_1.scf -o /tmp/2_cgnat_base_1.scf
+curl --silent https://raw.githubusercontent.com/learnf5/$COURSE_ID/main/2_cgnat_base_1.scf -o /tmp/2_cgnat_base_1.scf
 sudo scp /tmp/2_cgnat_base_1.scf 192.168.1.31:/var/local/scf
 sudo ssh 192.168.1.31 tmsh mod sys state-mirroring addr none
 sudo ssh 192.168.1.31 tmsh mod cm device bigip1.f5trn.com configsync-ip none
